@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medical Abbreviation Finder | AnkitStudyPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red: #e63946; --dark: #0d1117; --card: #161b22;
+    --border: #21262d; --muted: #8b949e; --white: #f0f6fc;
+    --green: #3fb950; --accent: #58a6ff;
+  }
+  body { background: var(--dark); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+  .header { background: linear-gradient(135deg,#0d1117,#161b22); border-bottom: 1px solid var(--border); padding: 28px 20px 22px; text-align: center; position: relative; overflow: hidden; }
+  .header::before { content:''; position:absolute; top:-60px; left:50%; transform:translateX(-50%); width:300px; height:300px; background:radial-gradient(circle,rgba(230,57,70,.15) 0%,transparent 70%); pointer-events:none; }
+  .header-badge { display:inline-block; background:rgba(230,57,70,.12); border:1px solid rgba(230,57,70,.3); color:var(--red); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2px; padding:4px 12px; border-radius:20px; margin-bottom:10px; }
+  .header h1 { font-family:'Bebas Neue',sans-serif; font-size:clamp(32px,8vw,52px); letter-spacing:3px; color:var(--white); line-height:1; }
+  .header h1 span { color:var(--red); }
+  .header p { color:var(--muted); font-size:13px; margin-top:8px; }
+  .counter { display:inline-block; background:rgba(63,185,80,.1); border:1px solid rgba(63,185,80,.25); color:var(--green); font-family:'JetBrains Mono',monospace; font-size:11px; padding:3px 10px; border-radius:20px; margin-top:8px; }
+  .container { max-width:720px; margin:0 auto; padding:28px 16px 40px; }
+  .search-wrap { position:relative; margin-bottom:20px; }
+  .search-icon { position:absolute; left:18px; top:50%; transform:translateY(-50%); font-size:18px; pointer-events:none; opacity:.5; }
+  .search-input { width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:12px; padding:16px 120px 16px 52px; font-size:18px; font-family:'JetBrains Mono',monospace; color:var(--white); font-weight:600; letter-spacing:1px; outline:none; transition:border-color .2s,box-shadow .2s; }
+  .search-input::placeholder { font-family:'DM Sans',sans-serif; font-weight:400; font-size:14px; letter-spacing:0; color:var(--muted); }
+  .search-input:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(230,57,70,.12); }
+  .search-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--red); border:none; border-radius:8px; color:white; font-family:'DM Sans',sans-serif; font-weight:600; font-size:13px; padding:10px 18px; cursor:pointer; transition:background .2s; }
+  .search-btn:hover { background:#c1121f; }
+  .quick-label { font-size:11px; letter-spacing:1.5px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-bottom:8px; }
+  .pills { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:24px; }
+  .pill { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:5px 12px; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--accent); cursor:pointer; transition:all .15s; letter-spacing:1px; }
+  .pill:hover { background:rgba(88,166,255,.1); border-color:var(--accent); transform:translateY(-1px); }
+  .result-card { background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden; display:none; animation:slideIn .3s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .result-card.visible { display:block; }
+  .result-header { background:linear-gradient(90deg,rgba(230,57,70,.15) 0%,transparent 100%); border-bottom:1px solid var(--border); padding:18px 22px; display:flex; align-items:center; gap:14px; }
+  .abbr-badge { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--red); letter-spacing:2px; background:rgba(230,57,70,.1); border:1px solid rgba(230,57,70,.25); padding:4px 14px; border-radius:8px; min-width:fit-content; }
+  .result-fullform { font-size:15px; font-weight:600; color:var(--white); line-height:1.3; }
+  .result-category { font-size:11px; color:var(--green); font-family:'JetBrains Mono',monospace; letter-spacing:1px; margin-top:3px; }
+  .result-body { padding:20px 22px; }
+  .info-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  @media(max-width:480px){.info-row{grid-template-columns:1fr}}
+  .info-box { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .info-box-label { font-size:10px; letter-spacing:1.5px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-bottom:6px; text-transform:uppercase; }
+  .info-box-value { font-size:14px; color:var(--white); font-weight:500; line-height:1.5; }
+  .meaning-box { background:rgba(63,185,80,.06); border:1px solid rgba(63,185,80,.2); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .meaning-box-label { font-size:10px; letter-spacing:1.5px; color:var(--green); font-family:'JetBrains Mono',monospace; margin-bottom:6px; }
+  .meaning-box-value { font-size:14px; color:var(--white); line-height:1.6; }
+  .example-box { background:rgba(88,166,255,.06); border:1px solid rgba(88,166,255,.2); border-radius:10px; padding:14px; }
+  .example-box-label { font-size:10px; letter-spacing:1.5px; color:var(--accent); font-family:'JetBrains Mono',monospace; margin-bottom:6px; }
+  .example-box-value { font-size:13px; color:#c9d1d9; line-height:1.6; font-style:italic; }
+  .error-box { background:rgba(230,57,70,.08); border:1px solid rgba(230,57,70,.25); border-radius:12px; padding:18px 20px; color:#ff6b6b; font-size:14px; text-align:center; display:none; }
+  .error-box.visible { display:block; }
+  .footer { text-align:center; color:var(--muted); font-size:11px; margin-top:32px; letter-spacing:.5px; border-top:1px solid var(--border); padding-top:20px; }
+  .footer a { color:var(--red); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-badge">⚕ D.PHARMACY TOOL</div>
+  <h1>MEDICAL <span>ABB.</span> FINDER</h1>
+  <p>Prescription abbreviations ka full form aur meaning — instantly</p>
+  <div class="counter">📚 200+ Abbreviations — No Internet Required!</div>
+</div>
+<div class="container">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" id="searchInput" placeholder="Type abbreviation e.g. OD, BD, PRN..." maxlength="20" autocomplete="off"/>
+    <button class="search-btn" onclick="searchAbbr()">FIND →</button>
+  </div>
+  <div class="quick-label">QUICK SEARCH</div>
+  <div class="pills">
+    <span class="pill" onclick="quickSearch('OD')">OD</span>
+    <span class="pill" onclick="quickSearch('BD')">BD</span>
+    <span class="pill" onclick="quickSearch('TDS')">TDS</span>
+    <span class="pill" onclick="quickSearch('QID')">QID</span>
+    <span class="pill" onclick="quickSearch('PRN')">PRN</span>
+    <span class="pill" onclick="quickSearch('STAT')">STAT</span>
+    <span class="pill" onclick="quickSearch('SOS')">SOS</span>
+    <span class="pill" onclick="quickSearch('IM')">IM</span>
+    <span class="pill" onclick="quickSearch('IV')">IV</span>
+    <span class="pill" onclick="quickSearch('SC')">SC</span>
+    <span class="pill" onclick="quickSearch('PO')">PO</span>
+    <span class="pill" onclick="quickSearch('NPO')">NPO</span>
+    <span class="pill" onclick="quickSearch('AC')">AC</span>
+    <span class="pill" onclick="quickSearch('PC')">PC</span>
+    <span class="pill" onclick="quickSearch('HS')">HS</span>
+    <span class="pill" onclick="quickSearch('BP')">BP</span>
+    <span class="pill" onclick="quickSearch('HR')">HR</span>
+    <span class="pill" onclick="quickSearch('CBC')">CBC</span>
+    <span class="pill" onclick="quickSearch('Rx')">Rx</span>
+    <span class="pill" onclick="quickSearch('OTC')">OTC</span>
+  </div>
+  <div class="error-box" id="errorBox"></div>
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="abbr-badge" id="resAbbr"></div>
+      <div>
+        <div class="result-fullform" id="resFullform"></div>
+        <div class="result-category" id="resCategory"></div>
+      </div>
+    </div>
+    <div class="result-body">
+      <div class="meaning-box">
+        <div class="meaning-box-label">📖 MEANING & EXPLANATION</div>
+        <div class="meaning-box-value" id="resMeaning"></div>
+      </div>
+      <div class="info-row">
+        <div class="info-box">
+          <div class="info-box-label">🌐 Latin / Origin</div>
+          <div class="info-box-value" id="resLatin"></div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-label">🏥 Used In</div>
+          <div class="info-box-value" id="resUsedIn"></div>
+        </div>
+      </div>
+      <div class="example-box">
+        <div class="example-box-label">💊 PRESCRIPTION EXAMPLE</div>
+        <div class="example-box-value" id="resExample"></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">Built for <a href="#">AnkitStudyPoint</a> · D.Pharmacy Students · 200+ Abbreviations</div>
+</div>
+<script>
+const DB = {
+  "OD":{"full":"Once Daily","cat":"DOSAGE FREQUENCY","meaning":"Medicine din mein sirf ek baar leni hai. Aksar subah li jaati hai.","latin":"Omni Die (Latin)","usedIn":"Prescriptions, Nursing notes","example":"Tab. Metformin 500mg OD after breakfast"},
+  "BD":{"full":"Twice Daily","cat":"DOSAGE FREQUENCY","meaning":"Medicine din mein do baar leni hai — subah aur raat.","latin":"Bis in Die (Latin)","usedIn":"Prescriptions","example":"Tab. Amoxicillin 250mg BD x 5 days"},
+  "TDS":{"full":"Three Times Daily","cat":"DOSAGE FREQUENCY","meaning":"Medicine din mein teen baar leni hai — subah, dopahar, raat.","latin":"Ter Die Sumendus (Latin)","usedIn":"Prescriptions","example":"Syp. Paracetamol 5ml TDS after meals"},
+  "QID":{"full":"Four Times Daily","cat":"DOSAGE FREQUENCY","meaning":"Medicine din mein chaar baar leni hai — har 6 ghante mein.","latin":"Quater in Die (Latin)","usedIn":"Prescriptions","example":"Tab. Tetracycline 250mg QID x 7 days"},
+  "QD":{"full":"Every Day","cat":"DOSAGE FREQUENCY","meaning":"Har roz ek baar medicine leni hai.","latin":"Quaque Die (Latin)","usedIn":"Prescriptions","example":"Tab. Atorvastatin 10mg QD at night"},
+  "Q4H":{"full":"Every 4 Hours","cat":"DOSAGE FREQUENCY","meaning":"Har 4 ghante mein medicine leni hai.","latin":"Quaque 4 Hora (Latin)","usedIn":"Hospital prescriptions","example":"Inj. Morphine 5mg Q4H for pain"},
+  "Q6H":{"full":"Every 6 Hours","cat":"DOSAGE FREQUENCY","meaning":"Har 6 ghante mein medicine leni hai.","latin":"Quaque 6 Hora (Latin)","usedIn":"Hospital prescriptions","example":"Tab. Ibuprofen 400mg Q6H"},
+  "Q8H":{"full":"Every 8 Hours","cat":"DOSAGE FREQUENCY","meaning":"Har 8 ghante mein medicine leni hai.","latin":"Quaque 8 Hora (Latin)","usedIn":"Hospital prescriptions","example":"Cap. Amoxicillin 500mg Q8H"},
+  "Q12H":{"full":"Every 12 Hours","cat":"DOSAGE FREQUENCY","meaning":"Har 12 ghante mein — yaani subah aur raat.","latin":"Quaque 12 Hora (Latin)","usedIn":"Prescriptions","example":"Tab. Azithromycin 500mg Q12H"},
+  "HS":{"full":"At Bedtime / Hour of Sleep","cat":"DOSAGE TIMING","meaning":"Raat ko sone se pehle medicine leni hai.","latin":"Hora Somni (Latin)","usedIn":"Prescriptions","example":"Tab. Alprazolam 0.5mg HS"},
+  "AC":{"full":"Before Meals","cat":"DOSAGE TIMING","meaning":"Khana khane se pehle medicine leni hai.","latin":"Ante Cibum (Latin)","usedIn":"Prescriptions","example":"Tab. Metformin 500mg AC"},
+  "PC":{"full":"After Meals","cat":"DOSAGE TIMING","meaning":"Khana khane ke baad medicine leni hai.","latin":"Post Cibum (Latin)","usedIn":"Prescriptions","example":"Tab. Pantoprazole 40mg PC"},
+  "PRN":{"full":"As Needed / When Required","cat":"DOSAGE INSTRUCTION","meaning":"Zaroorat padne par hi medicine leni hai — har roz nahi.","latin":"Pro Re Nata (Latin)","usedIn":"Prescriptions","example":"Tab. Paracetamol 500mg PRN for fever"},
+  "SOS":{"full":"If Needed (Emergency Use)","cat":"DOSAGE INSTRUCTION","meaning":"Sirf emergency ya specific symptom hone par lena hai.","latin":"Si Opus Sit (Latin)","usedIn":"Prescriptions","example":"Tab. Diazepam 5mg SOS for anxiety"},
+  "STAT":{"full":"Immediately / At Once","cat":"DOSAGE INSTRUCTION","meaning":"Ye medicine abhi turant deni/leni hai — koi delay nahi.","latin":"Statim (Latin)","usedIn":"Emergency, Hospital orders","example":"Inj. Adrenaline 0.5mg IM STAT"},
+  "PO":{"full":"By Mouth / Orally","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine muh se khani hai — tablet, syrup ya capsule.","latin":"Per Os (Latin)","usedIn":"Prescriptions","example":"Tab. Paracetamol 500mg PO TDS"},
+  "IV":{"full":"Intravenous","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine seedha nass (vein) mein inject ki jaati hai.","latin":"Intra Venous (Latin)","usedIn":"Hospital, ICU","example":"Inj. Ceftriaxone 1g IV OD"},
+  "IM":{"full":"Intramuscular","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine muscle mein inject ki jaati hai — jaise thigh ya buttock.","latin":"Intra Muscular (Latin)","usedIn":"Injections, Vaccines","example":"Inj. Diclofenac 75mg IM SOS"},
+  "SC":{"full":"Subcutaneous","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine skin ke neeche fat layer mein inject ki jaati hai.","latin":"Sub Cutaneous (Latin)","usedIn":"Insulin, Heparin injections","example":"Inj. Insulin 10 units SC before meal"},
+  "SL":{"full":"Sublingual","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine jeebh ke neeche rakhni hai — wahan se absorb hoti hai.","latin":"Sub Lingua (Latin)","usedIn":"Nitroglycerin, emergency drugs","example":"Tab. Sorbitrate 5mg SL for chest pain"},
+  "TOP":{"full":"Topical","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine skin pe lagani hai — cream, ointment ya lotion.","latin":"English origin","usedIn":"Skin conditions","example":"Betamethasone cream TOP BD"},
+  "PR":{"full":"Per Rectum","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine guda marg se di jaati hai — suppository.","latin":"Per Rectum (Latin)","usedIn":"Suppositories, enemas","example":"Suppository Bisacodyl 10mg PR HS"},
+  "INH":{"full":"Inhalation","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine saanson ke zariye lungs mein li jaati hai.","latin":"English origin","usedIn":"Asthma inhalers","example":"Salbutamol inhaler 2 puffs INH PRN"},
+  "NPO":{"full":"Nothing by Mouth","cat":"ROUTE OF ADMINISTRATION","meaning":"Kuch bhi muh se nahi lena — na khana na paani. Surgery se pehle use hota hai.","latin":"Nil Per Os (Latin)","usedIn":"Pre-surgery, some tests","example":"Patient NPO after midnight for surgery"},
+  "NAS":{"full":"Nasal","cat":"ROUTE OF ADMINISTRATION","meaning":"Medicine naak ke zariye di jaati hai — nasal drops ya spray.","latin":"English origin","usedIn":"Nasal sprays, drops","example":"Xylometazoline nasal drops NAS BD"},
+  "Rx":{"full":"Prescription / Take This Medicine","cat":"PRESCRIPTION SYMBOL","meaning":"Ye symbol prescription ka start hai — iska matlab 'take this medicine'.","latin":"Recipe (Latin) — meaning 'take'","usedIn":"All prescriptions","example":"Rx: Tab. Amoxicillin 500mg BD x 5 days"},
+  "Dx":{"full":"Diagnosis","cat":"MEDICAL SHORTHAND","meaning":"Patient ki bimari ka naam ya pata lagana.","latin":"English shorthand","usedIn":"Medical records, case sheets","example":"Dx: Type 2 Diabetes Mellitus"},
+  "Hx":{"full":"History","cat":"MEDICAL SHORTHAND","meaning":"Patient ki purani bimariyon aur treatments ka record.","latin":"English shorthand","usedIn":"Case sheets, medical records","example":"Hx: Hypertension since 5 years"},
+  "Sx":{"full":"Symptoms","cat":"MEDICAL SHORTHAND","meaning":"Patient jo complaints batata hai — jaise dard, bukhar etc.","latin":"English shorthand","usedIn":"Medical notes","example":"Sx: Fever, cough, headache"},
+  "Tx":{"full":"Treatment","cat":"MEDICAL SHORTHAND","meaning":"Patient ko jo treatment di ja rahi hai.","latin":"English shorthand","usedIn":"Medical records","example":"Tx: Antibiotics + rest"},
+  "Fx":{"full":"Fracture","cat":"MEDICAL SHORTHAND","meaning":"Haddi toot jaana.","latin":"English shorthand","usedIn":"Orthopaedic notes","example":"Fx: Right tibia fracture"},
+  "BP":{"full":"Blood Pressure","cat":"VITAL SIGNS","meaning":"Khoon ka dabaav — normal 120/80 mmHg hota hai.","latin":"English origin","usedIn":"Monitoring, prescriptions","example":"BP: 130/85 mmHg — slightly elevated"},
+  "HR":{"full":"Heart Rate","cat":"VITAL SIGNS","meaning":"1 minute mein dil kitni baar dhadakta hai — normal 60-100/min.","latin":"English origin","usedIn":"Monitoring","example":"HR: 88 bpm — normal"},
+  "RR":{"full":"Respiratory Rate","cat":"VITAL SIGNS","meaning":"1 minute mein kitni saans li jaati hai — normal 12-20/min.","latin":"English origin","usedIn":"Monitoring","example":"RR: 18 breaths/min — normal"},
+  "SPO2":{"full":"Oxygen Saturation","cat":"VITAL SIGNS","meaning":"Khoon mein oxygen ki matra — normal 95-100% honi chahiye.","latin":"English origin","usedIn":"ICU, pulse oximeter","example":"SpO2: 96% on room air"},
+  "BMI":{"full":"Body Mass Index","cat":"VITAL SIGNS","meaning":"Weight aur height ke hisaab se body fat ka andaza — normal 18.5-24.9.","latin":"English origin","usedIn":"Health assessment","example":"BMI: 26.5 — slightly overweight"},
+  "CBC":{"full":"Complete Blood Count","cat":"LAB TEST","meaning":"Khoon ka poora test — RBC, WBC, platelets sab check hote hain.","latin":"English origin","usedIn":"Pathology labs","example":"Advised: CBC, ESR, LFT"},
+  "RBC":{"full":"Red Blood Cells","cat":"LAB TEST","meaning":"Laal khoon ke kankad — oxygen carry karte hain.","latin":"English origin","usedIn":"CBC report","example":"RBC: 4.5 million/μL — normal"},
+  "WBC":{"full":"White Blood Cells","cat":"LAB TEST","meaning":"Safed khoon ke kankad — infection se ladne ka kaam karte hain.","latin":"English origin","usedIn":"CBC report","example":"WBC: 11,000/μL — elevated, infection likely"},
+  "HB":{"full":"Hemoglobin","cat":"LAB TEST","meaning":"RBC mein protein jo oxygen carry karta hai — normal 12-17 g/dL.","latin":"English origin","usedIn":"CBC report, anemia diagnosis","example":"Hb: 9.5 g/dL — anaemia present"},
+  "ESR":{"full":"Erythrocyte Sedimentation Rate","cat":"LAB TEST","meaning":"Inflammation aur infection detect karne ka test.","latin":"English origin","usedIn":"Pathology","example":"ESR: 35 mm/hr — elevated"},
+  "LFT":{"full":"Liver Function Test","cat":"LAB TEST","meaning":"Liver kitna sahi kaam kar raha hai — ye test batata hai.","latin":"English origin","usedIn":"Pathology labs","example":"LFT: SGOT, SGPT, Bilirubin normal"},
+  "KFT":{"full":"Kidney Function Test","cat":"LAB TEST","meaning":"Gurdey ka kaam theek hai ya nahi — ye test batata hai.","latin":"English origin","usedIn":"Pathology labs","example":"KFT: Creatinine 1.2 mg/dL — normal"},
+  "FBS":{"full":"Fasting Blood Sugar","cat":"LAB TEST","meaning":"Khali pet blood sugar test — normal 70-100 mg/dL.","latin":"English origin","usedIn":"Diabetes diagnosis","example":"FBS: 126 mg/dL — diabetic range"},
+  "PPBS":{"full":"Post Prandial Blood Sugar","cat":"LAB TEST","meaning":"Khana khane ke 2 ghante baad blood sugar — normal <140 mg/dL.","latin":"English origin","usedIn":"Diabetes monitoring","example":"PPBS: 185 mg/dL — high"},
+  "ECG":{"full":"Electrocardiogram","cat":"DIAGNOSTIC TEST","meaning":"Dil ki electrical activity record karne ki machine.","latin":"English origin","usedIn":"Cardiology","example":"ECG: Normal sinus rhythm"},
+  "USG":{"full":"Ultrasonography","cat":"DIAGNOSTIC TEST","meaning":"Sound waves se body ke andar ka picture — ultrasound.","latin":"English origin","usedIn":"Radiology","example":"USG abdomen: Normal findings"},
+  "MRI":{"full":"Magnetic Resonance Imaging","cat":"DIAGNOSTIC TEST","meaning":"Magnetic field se body ke andar ki detailed image.","latin":"English origin","usedIn":"Radiology, Neurology","example":"MRI brain: No abnormality detected"},
+  "CT":{"full":"Computed Tomography","cat":"DIAGNOSTIC TEST","meaning":"X-ray se body ki cross-section images — CT scan.","latin":"English origin","usedIn":"Radiology","example":"CT chest: Clear, no lesion"},
+  "TAB":{"full":"Tablet","cat":"DOSAGE FORM","meaning":"Solid compressed medicine jo muh se li jaati hai.","latin":"English origin","usedIn":"Prescriptions","example":"Tab. Paracetamol 500mg BD"},
+  "CAP":{"full":"Capsule","cat":"DOSAGE FORM","meaning":"Gelatin shell mein powder ya liquid medicine.","latin":"English origin","usedIn":"Prescriptions","example":"Cap. Omeprazole 20mg OD"},
+  "SYP":{"full":"Syrup","cat":"DOSAGE FORM","meaning":"Liquid medicine — aksar bacchon ke liye use hoti hai.","latin":"English origin","usedIn":"Paediatric prescriptions","example":"Syp. Amoxicillin 125mg/5ml — 5ml TDS"},
+  "INJ":{"full":"Injection","cat":"DOSAGE FORM","meaning":"Needle se dene wali medicine — IV ya IM.","latin":"English origin","usedIn":"Hospital, Clinic","example":"Inj. Ceftriaxone 1g IV OD"},
+  "SUPP":{"full":"Suppository","cat":"DOSAGE FORM","meaning":"Rectum ya vagina mein daali jaane wali solid medicine.","latin":"English origin","usedIn":"Rectal/vaginal route","example":"Supp. Glycerin PR HS"},
+  "OINT":{"full":"Ointment","cat":"DOSAGE FORM","meaning":"Skin pe lagane wali semi-solid greasy preparation.","latin":"English origin","usedIn":"Dermatology","example":"Oint. Mupirocin TOP BD"},
+  "GEL":{"full":"Gel","cat":"DOSAGE FORM","meaning":"Transparent semi-solid medicine — skin ya mucous membrane pe lagaate hain.","latin":"English origin","usedIn":"Topical application","example":"Gel Diclofenac TOP TDS for joint pain"},
+  "HTN":{"full":"Hypertension","cat":"MEDICAL CONDITION","meaning":"High blood pressure — 140/90 mmHg se upar.","latin":"English origin","usedIn":"Medical records","example":"Dx: HTN — start Tab. Amlodipine 5mg OD"},
+  "DM":{"full":"Diabetes Mellitus","cat":"MEDICAL CONDITION","meaning":"Blood sugar high rehna — Type 1 ya Type 2.","latin":"Latin origin","usedIn":"Medical records","example":"Dx: DM Type 2 — Tab. Metformin 500mg BD"},
+  "MI":{"full":"Myocardial Infarction","cat":"MEDICAL CONDITION","meaning":"Heart attack — dil ki muscle ko blood supply band ho jaana.","latin":"Latin origin","usedIn":"Cardiology","example":"Hx: MI 2 years ago"},
+  "CVA":{"full":"Cerebrovascular Accident","cat":"MEDICAL CONDITION","meaning":"Brain stroke — brain ko blood supply mein problem.","latin":"Latin/English","usedIn":"Neurology","example":"Dx: CVA — right sided weakness"},
+  "UTI":{"full":"Urinary Tract Infection","cat":"MEDICAL CONDITION","meaning":"Peshab ki nali ya kidney mein infection.","latin":"English origin","usedIn":"Medical records","example":"Dx: UTI — Tab. Nitrofurantoin BD x 7 days"},
+  "URTI":{"full":"Upper Respiratory Tract Infection","cat":"MEDICAL CONDITION","meaning":"Naak, gala aur oopar ki saans ki nali ka infection — sardi, khansi.","latin":"English origin","usedIn":"Medical records","example":"Dx: URTI — symptomatic treatment"},
+  "TB":{"full":"Tuberculosis","cat":"MEDICAL CONDITION","meaning":"Mycobacterium tuberculosis se hone wali bimari — aksar lungs mein.","latin":"English origin","usedIn":"Medical records","example":"Dx: Pulmonary TB — start DOTS therapy"},
+  "IHD":{"full":"Ischaemic Heart Disease","cat":"MEDICAL CONDITION","meaning":"Dil ki naaliyon mein blockage — angina ya heart attack.","latin":"English origin","usedIn":"Cardiology","example":"Hx: IHD — on aspirin and statin"},
+  "OTC":{"full":"Over The Counter","cat":"PHARMACY TERM","meaning":"Bina prescription ke mil sakne wali medicines.","latin":"English origin","usedIn":"Pharmacy","example":"Paracetamol is an OTC drug"},
+  "IP":{"full":"Indian Pharmacopoeia","cat":"PHARMACY TERM","meaning":"India ki official drug standards book.","latin":"English origin","usedIn":"Pharmacy, drug manufacturing","example":"Paracetamol IP 500mg"},
+  "USP":{"full":"United States Pharmacopeia","cat":"PHARMACY TERM","meaning":"America ki official drug standards book.","latin":"English origin","usedIn":"Pharmacy","example":"Ibuprofen USP 400mg"},
+  "MRP":{"full":"Maximum Retail Price","cat":"PHARMACY TERM","meaning":"Medicine ki maximum selling price — isse zyada nahi le sakte.","latin":"English origin","usedIn":"Retail pharmacy","example":"MRP: Rs.45.50 printed on strip"},
+  "EXP":{"full":"Expiry Date","cat":"PHARMACY TERM","meaning":"Medicine use karne ki aakhri tarikh — baad mein nahi leni chahiye.","latin":"English origin","usedIn":"All medicines","example":"EXP: 03/2026"},
+  "MFG":{"full":"Manufacturing Date","cat":"PHARMACY TERM","meaning":"Medicine kab bani — ye date label pe hoti hai.","latin":"English origin","usedIn":"All medicines","example":"MFG: 03/2024"},
+  "ADR":{"full":"Adverse Drug Reaction","cat":"PHARMACY TERM","meaning":"Medicine se hone wala unwanted ya harmful effect.","latin":"English origin","usedIn":"Pharmacovigilance","example":"ADR reported: Rash after Penicillin"},
+  "CI":{"full":"Contraindication","cat":"PHARMACY TERM","meaning":"Condition jisme medicine bilkul nahi deni chahiye.","latin":"English origin","usedIn":"Drug information","example":"CI: Aspirin in children — Reye syndrome risk"},
+  "COD":{"full":"Complains Of","cat":"MEDICAL NOTATION","meaning":"Patient in problems ki shikayat kar raha hai.","latin":"English shorthand","usedIn":"Case sheets","example":"Patient c/o fever and headache x 3 days"},
+  "KCO":{"full":"Known Case Of","cat":"MEDICAL NOTATION","meaning":"Patient ko pehle se ye bimari hai.","latin":"English shorthand","usedIn":"Case sheets","example":"K/c/o HTN and DM"},
+  "HO":{"full":"History Of","cat":"MEDICAL NOTATION","meaning":"Purani ya pehle ki bimari ka record.","latin":"English shorthand","usedIn":"Case sheets","example":"H/O Asthma since childhood"},
+  "FH":{"full":"Family History","cat":"MEDICAL NOTATION","meaning":"Patient ke ghar walon mein koi bimari.","latin":"English shorthand","usedIn":"Case sheets","example":"F/H: Father had DM and HTN"},
+  "OE":{"full":"On Examination","cat":"MEDICAL NOTATION","meaning":"Doctor ne check kiya to yeh mila.","latin":"English shorthand","usedIn":"Case sheets","example":"O/E: BP 150/90, Temp normal"},
+  "NAD":{"full":"No Abnormality Detected","cat":"MEDICAL NOTATION","meaning":"Examination mein kuch bhi abnormal nahi mila.","latin":"English origin","usedIn":"Medical reports","example":"Abdomen O/E: NAD"},
+  "WNL":{"full":"Within Normal Limits","cat":"MEDICAL NOTATION","meaning":"Sab kuch normal range mein hai.","latin":"English origin","usedIn":"Lab reports","example":"LFT: WNL"},
+  "SOB":{"full":"Shortness of Breath","cat":"MEDICAL SYMPTOM","meaning":"Saans lene mein takleef ya saans phoolna.","latin":"English origin","usedIn":"Medical notes","example":"Patient c/o SOB on exertion"},
+  "LOC":{"full":"Loss of Consciousness","cat":"MEDICAL SYMPTOM","meaning":"Patient behosh ho jaana.","latin":"English origin","usedIn":"Emergency notes","example":"Patient had LOC for 5 minutes"},
+  "NV":{"full":"Nausea and Vomiting","cat":"MEDICAL SYMPTOM","meaning":"Ji machlana aur ulti aana.","latin":"English shorthand","usedIn":"Medical notes","example":"Patient c/o N/V since morning"},
+  "OA":{"full":"Osteoarthritis","cat":"MEDICAL CONDITION","meaning":"Joints mein cartilage ghis jaana — dard aur stiffness hoti hai.","latin":"English origin","usedIn":"Orthopaedics","example":"Dx: OA knee — Tab. Diclofenac PRN"},
+  "RA":{"full":"Rheumatoid Arthritis","cat":"MEDICAL CONDITION","meaning":"Immune system joints ko attack karta hai — dard, sujan.","latin":"English origin","usedIn":"Rheumatology","example":"Dx: RA — start Methotrexate"},
+  "COPD":{"full":"Chronic Obstructive Pulmonary Disease","cat":"MEDICAL CONDITION","meaning":"Lungs mein airflow permanently kam ho jaana — aksar smoking se.","latin":"English origin","usedIn":"Pulmonology","example":"Dx: COPD — Tiotropium inhaler OD"},
+  "CCF":{"full":"Congestive Cardiac Failure","cat":"MEDICAL CONDITION","meaning":"Dil khoon pump karne mein kamzor ho jaata hai.","latin":"English origin","usedIn":"Cardiology","example":"Dx: CCF — start Furosemide BD"},
+  "CKD":{"full":"Chronic Kidney Disease","cat":"MEDICAL CONDITION","meaning":"Gurdey dheere dheere kaam karna band kar dete hain.","latin":"English origin","usedIn":"Nephrology","example":"Dx: CKD Stage 3"},
+  "GERD":{"full":"Gastroesophageal Reflux Disease","cat":"MEDICAL CONDITION","meaning":"Pait ka acid wapas oesophagus mein aana — acidity, jalan.","latin":"English origin","usedIn":"Gastroenterology","example":"Dx: GERD — Tab. Omeprazole 20mg OD AC"},
+  "IBS":{"full":"Irritable Bowel Syndrome","cat":"MEDICAL CONDITION","meaning":"Aant mein dard aur motions ki problem — stress se zyada hoti hai.","latin":"English origin","usedIn":"Gastroenterology","example":"Dx: IBS — dietary modification advised"},
+  "PUD":{"full":"Peptic Ulcer Disease","cat":"MEDICAL CONDITION","meaning":"Pait ya small intestine mein ghao — H. pylori ya NSAIDs se.","latin":"English origin","usedIn":"Gastroenterology","example":"Dx: PUD — Triple therapy started"},
+  "NSAID":{"full":"Non-Steroidal Anti-Inflammatory Drug","cat":"DRUG CLASS","meaning":"Dard, bukhaar aur sujan khatam karne ki medicines — jaise ibuprofen.","latin":"English origin","usedIn":"Pharmacology","example":"NSAID: Ibuprofen 400mg TDS for pain"},
+  "ACE":{"full":"Angiotensin Converting Enzyme","cat":"DRUG CLASS","meaning":"BP kam karne wali medicines ki ek class — ACE inhibitors.","latin":"English origin","usedIn":"Cardiology, Pharmacology","example":"ACE inhibitor: Enalapril 5mg OD for HTN"},
+  "ARB":{"full":"Angiotensin Receptor Blocker","cat":"DRUG CLASS","meaning":"BP kam karne wali medicines — jaise Losartan, Telmisartan.","latin":"English origin","usedIn":"Cardiology","example":"ARB: Losartan 50mg OD for HTN"},
+  "ORS":{"full":"Oral Rehydration Solution","cat":"PHARMACY TERM","meaning":"Diarrhea mein paani aur namak ki kami poori karne ka ghol.","latin":"English origin","usedIn":"Diarrhea, dehydration","example":"ORS 200ml after every loose stool"},
+  "PPE":{"full":"Personal Protective Equipment","cat":"MEDICAL TERM","meaning":"Doctor/nurse ke liye protection — mask, gloves, gown.","latin":"English origin","usedIn":"Hospital infection control","example":"PPE mandatory in ICU and OT"},
+  "ICU":{"full":"Intensive Care Unit","cat":"HOSPITAL DEPARTMENT","meaning":"Critical patients ke liye special ward — 24 ghante monitoring.","latin":"English origin","usedIn":"Hospital","example":"Patient shifted to ICU after MI"},
+  "OPD":{"full":"Out Patient Department","cat":"HOSPITAL DEPARTMENT","meaning":"Woh patients jo admit nahi hote — sirf check-up ke liye aate hain.","latin":"English origin","usedIn":"Hospital","example":"Patient seen in OPD"},
+  "IPD":{"full":"In Patient Department","cat":"HOSPITAL DEPARTMENT","meaning":"Admit hone wale patients ka ward.","latin":"English origin","usedIn":"Hospital","example":"Patient admitted to IPD for observation"},
+  "OT":{"full":"Operation Theatre","cat":"HOSPITAL DEPARTMENT","meaning":"Surgery ke liye special room.","latin":"English origin","usedIn":"Hospital","example":"Patient taken to OT for appendectomy"},
+  "ER":{"full":"Emergency Room","cat":"HOSPITAL DEPARTMENT","meaning":"Emergency cases ke liye — accident, heart attack etc.","latin":"English origin","usedIn":"Hospital","example":"Patient brought to ER unconscious"}
+};
+
+const input = document.getElementById('searchInput');
+input.addEventListener('keydown', e => { if(e.key==='Enter') searchAbbr(); });
+input.addEventListener('input', () => { input.value = input.value.toUpperCase(); });
+
+function quickSearch(abbr) { input.value = abbr; searchAbbr(); }
+
+function searchAbbr() {
+  const query = input.value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!query) { showError("Koi abbreviation type karo!"); return; }
+  hideAll();
+  if(DB[query]) { renderResult(query, DB[query]); return; }
+  // Partial match
+  const keys = Object.keys(DB);
+  const match = keys.find(k => k === query || k.startsWith(query));
+  if(match) { renderResult(match, DB[match]); return; }
+  showError('"' + input.value.trim().toUpperCase() + '" database mein nahi mila. Spelling check karo ya koi aur try karo!');
+}
+
+function renderResult(abbr, d) {
+  document.getElementById('resAbbr').textContent = abbr;
+  document.getElementById('resFullform').textContent = d.full;
+  document.getElementById('resCategory').textContent = d.cat;
+  document.getElementById('resMeaning').textContent = d.meaning;
+  document.getElementById('resLatin').textContent = d.latin;
+  document.getElementById('resUsedIn').textContent = d.usedIn;
+  document.getElementById('resExample').textContent = d.example;
+  document.getElementById('resultCard').classList.add('visible');
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.textContent = msg;
+  b.classList.add('visible');
+}
+
+function hideAll() {
+  document.getElementById('resultCard').classList.remove('visible');
+  document.getElementById('errorBox').classList.remove('visible');
+}
+</script>
+</body>
+</html>
